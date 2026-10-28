@@ -1,0 +1,1104 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>iPhone 16 Pro iOS 18 Emulator</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: #090a0f;
+            color: #ffffff;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Phone Frame styling */
+        .iphone-device {
+            position: relative;
+            width: 100%;
+            max-width: 390px;
+            height: 844px;
+            max-height: 100vh;
+            background: #000;
+            border-radius: 50px;
+            overflow: hidden;
+            box-shadow: 
+                0 0 0 3px #3a3a3c,
+                0 0 0 9px #1c1c1e,
+                0 30px 70px rgba(0, 0, 0, 0.9);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        @media (max-width: 480px) {
+            .iphone-device {
+                border-radius: 0;
+                max-width: 100vw;
+                height: 100vh;
+                max-height: 100vh;
+                box-shadow: none;
+            }
+        }
+
+        /* Glassmorphism effects */
+        .glass {
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .glass-dark {
+            background: rgba(25, 25, 30, 0.75);
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+        }
+
+        .dock-glass {
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(35px);
+            -webkit-backdrop-filter: blur(35px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        /* App Windows Transition */
+        .app-window {
+            transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1), opacity 0.3s ease, border-radius 0.35s ease;
+            transform-origin: center bottom;
+            will-change: transform, opacity;
+        }
+
+        .app-window.closed {
+            opacity: 0;
+            transform: scale(0.18) translateY(300px);
+            pointer-events: none;
+            border-radius: 40px;
+        }
+
+        .app-window.open {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+            pointer-events: auto;
+            border-radius: 48px;
+        }
+
+        /* Dynamic Island */
+        .dynamic-island {
+            transition: all 0.38s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .dynamic-island.expanded {
+            width: 320px !important;
+            height: 72px !important;
+            border-radius: 28px !important;
+        }
+
+        /* Pages Slider */
+        .pages-wrapper {
+            display: flex;
+            width: 300%;
+            height: 100%;
+            transition: transform 0.32s cubic-bezier(0.2, 0.9, 0.3, 1);
+        }
+
+        .page-screen {
+            width: 33.3333%;
+            height: 100%;
+            padding: 12px 16px;
+        }
+
+        /* App Icon Animations */
+        .app-icon-btn {
+            transition: transform 0.15s ease, filter 0.15s ease;
+        }
+        .app-icon-btn:active {
+            transform: scale(0.86);
+            filter: brightness(0.85);
+        }
+
+        /* Wallpapers Pre-sets */
+        .wp-ios18 { background: linear-gradient(135deg, #0d1b2a, #1b263b, #415a77, #778da9); }
+        .wp-neon { background: linear-gradient(135deg, #2b1055, #7597de, #b827fc, #2c003e); }
+        .wp-ocean { background: linear-gradient(135deg, #001219, #005f73, #0a9396, #94d2bd); }
+        .wp-sunset { background: linear-gradient(135deg, #3d0066, #8c001a, #ff5400, #ffbd00); }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 3px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.3); border-radius: 10px; }
+    </style>
+</head>
+<body>
+
+    <!-- PHONE DEVICE FRAME -->
+    <div id="iphoneDevice" class="iphone-device">
+
+        <!-- WALLPAPER BACKDROP -->
+        <div id="wallpaperBackdrop" class="absolute inset-0 wp-ios18 bg-cover bg-center transition-all duration-500 z-0"></div>
+
+        <!-- 1. LOCK SCREEN OVERLAY -->
+        <div id="lockScreen" class="absolute inset-0 z-40 flex flex-col justify-between p-6 pt-12 text-center transition-all duration-500 bg-black/20 backdrop-blur-md">
+            <div class="flex flex-col items-center mt-6">
+                <i class="fa-solid fa-lock text-xs text-white/70 mb-2"></i>
+                <div id="lockTime" class="text-7xl font-light tracking-tight text-white/95 drop-shadow-md">12:00</div>
+                <div id="lockDate" class="text-sm font-medium text-white/80 mt-1">Среда, 28 октября</div>
+            </div>
+
+            <!-- Lockscreen Audio Widget -->
+            <div class="glass-dark rounded-2xl p-4 text-left shadow-2xl border border-white/10 my-auto">
+                <div class="flex items-center justify-between mb-2">
+                    <div class="flex items-center space-x-2">
+                        <div class="w-6 h-6 rounded-md bg-gradient-to-tr from-pink-500 to-red-500 flex items-center justify-center text-xs">
+                            <i class="fa-solid fa-music text-white text-[10px]"></i>
+                        </div>
+                        <span class="text-xs font-semibold text-white/80">Apple Music</span>
+                    </div>
+                    <span class="text-[10px] text-white/50">iOS 18</span>
+                </div>
+                <p class="text-sm font-bold text-white">iPhone 16 Pro Emulator</p>
+                <p class="text-xs text-white/60">Смахните вверх для входа</p>
+            </div>
+
+            <!-- Quick Action Buttons -->
+            <div class="flex justify-between items-center px-4 mb-2">
+                <button onclick="toggleFlashlight()" class="w-12 h-12 rounded-full glass flex items-center justify-center text-lg active:scale-90 transition">
+                    <i id="lockFlashIcon" class="fa-solid fa-flashlight"></i>
+                </button>
+                <p class="text-xs text-white/70 animate-pulse font-medium">Смахните вверх</p>
+                <button onclick="openApp('cameraApp'); unlockPhone();" class="w-12 h-12 rounded-full glass flex items-center justify-center text-lg active:scale-90 transition">
+                    <i class="fa-solid fa-camera"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- 2. CONTROL CENTER OVERLAY -->
+        <div id="controlCenter" class="absolute inset-0 z-40 bg-black/60 backdrop-blur-3xl transition-all duration-300 transform -translate-y-full p-6 pt-14 flex flex-col justify-between">
+            <div>
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-lg font-bold text-white">Пункт управления</h2>
+                    <button onclick="toggleControlCenter()" class="text-xs bg-white/20 px-3 py-1 rounded-full text-white">Закрыть</button>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="glass-dark rounded-3xl p-4 flex flex-col justify-between h-32">
+                        <div class="flex justify-between">
+                            <button id="wifiBtn" onclick="toggleQuickSetting('wifiBtn')" class="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center"><i class="fa-solid fa-wifi"></i></button>
+                            <button id="btBtn" onclick="toggleQuickSetting('btBtn')" class="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center"><i class="fa-brands fa-bluetooth-b"></i></button>
+                        </div>
+                        <p class="text-xs font-semibold text-gray-300">Связь</p>
+                    </div>
+                    <div class="glass-dark rounded-3xl p-4 flex flex-col justify-between h-32">
+                        <div class="flex justify-between">
+                            <button id="flashBtn" onclick="toggleFlashlight()" class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center"><i class="fa-solid fa-flashlight"></i></button>
+                            <button id="airBtn" onclick="toggleQuickSetting('airBtn')" class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center"><i class="fa-solid fa-plane"></i></button>
+                        </div>
+                        <p class="text-xs font-semibold text-gray-300">Режимы</p>
+                    </div>
+                </div>
+                <!-- Sliders -->
+                <div class="mt-4 space-y-4">
+                    <div class="glass-dark rounded-2xl p-3 flex items-center space-x-3">
+                        <i class="fa-solid fa-sun text-yellow-400"></i>
+                        <input type="range" class="w-full accent-white" min="30" max="100" value="100" oninput="document.getElementById('iphoneDevice').style.filter = `brightness(${this.value}%)`">
+                    </div>
+                    <div class="glass-dark rounded-2xl p-3 flex items-center space-x-3">
+                        <i class="fa-solid fa-volume-high text-blue-400"></i>
+                        <input type="range" class="w-full accent-white" min="0" max="100" value="80">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. STATUS BAR & DYNAMIC ISLAND -->
+        <div class="relative z-50 flex justify-between items-center px-7 pt-3 pb-1 text-xs text-white font-semibold">
+            <!-- Time -->
+            <span id="statusBarClock" class="w-12 text-center">12:00</span>
+
+            <!-- Dynamic Island -->
+            <div id="dynamicIsland" onclick="toggleIslandExpand()" class="dynamic-island absolute left-1/2 -translate-x-1/2 top-2 bg-black w-[110px] h-[28px] rounded-full z-50 flex items-center justify-between px-2 cursor-pointer border border-white/10 shadow-lg">
+                <div id="islandCompact" class="w-full flex items-center justify-between px-1">
+                    <div class="w-3 h-3 rounded-full bg-neutral-900 border border-neutral-800 flex items-center justify-center">
+                        <div class="w-1 h-1 rounded-full bg-blue-900"></div>
+                    </div>
+                    <div id="islandStatus" class="text-[9px] text-green-400 hidden">
+                        <i class="fa-solid fa-music animate-pulse"></i>
+                    </div>
+                </div>
+                <div id="islandExpanded" class="hidden w-full h-full flex items-center justify-between px-3 text-white">
+                    <div class="flex items-center space-x-2">
+                        <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-purple-500 to-pink-500 flex items-center justify-center">
+                            <i class="fa-solid fa-music text-xs"></i>
+                        </div>
+                        <div class="text-left">
+                            <p class="text-xs font-semibold">iOS Synth Sound</p>
+                            <p class="text-[9px] text-gray-400">Playing Music</p>
+                        </div>
+                    </div>
+                    <i class="fa-solid fa-wave-square text-green-400 animate-pulse text-xs"></i>
+                </div>
+            </div>
+
+            <!-- Icons -->
+            <div onclick="toggleControlCenter()" class="flex items-center space-x-2 w-12 justify-end cursor-pointer">
+                <i class="fa-solid fa-wifi text-[10px]"></i>
+                <i class="fa-solid fa-battery-full text-xs text-green-400"></i>
+            </div>
+        </div>
+
+        <!-- 4. HOME SCREEN WITH MULTI-PAGE SWIPING -->
+        <div id="homeScreen" class="relative z-10 flex-1 flex flex-col justify-between overflow-hidden">
+            
+            <!-- Pages Container -->
+            <div id="pagesWrapper" class="pages-wrapper">
+                
+                <!-- PAGE 1 (Main Core Apps) -->
+                <div class="page-screen grid grid-cols-4 grid-rows-4 gap-y-4 gap-x-3 pt-2">
+                    <div onclick="openApp('phoneApp')" class="app-icon-btn flex flex-col items-center gap-1 cursor-pointer">
+                        <div class="w-14 h-14 rounded-2xl bg-gradient-to-b from-green-400 to-green-600 flex items-center justify-center shadow-lg">
+                            <i class="fa-solid fa-phone text-2xl text-white"></i>
+                        </div>
+                        <span class="text-[10px] font-medium text-white drop-shadow">Телефон</span>
+                    </div>
+                    <div onclick="openApp('messagesApp')" class="app-icon-btn flex flex-col items-center gap-1 cursor-pointer">
+                        <div class="w-14 h-14 rounded-2xl bg-gradient-to-b from-green-500 to-emerald-700 flex items-center justify-center shadow-lg">
+                            <i class="fa-solid fa-comment text-2xl text-white"></i>
+                        </div>
+                        <span class="text-[10px] font-medium text-white drop-shadow">Сообщения</span>
+                    </div>
+                    <div onclick="openApp('safariApp')" class="app-icon-btn flex flex-col items-center gap-1 cursor-pointer">
+                        <div class="w-14 h-14 rounded-2xl bg-white flex items-center justify-center shadow-lg">
+                            <i class="fa-compass fa-regular text-3xl text-blue-500"></i>
+                        </div>
+                        <span class="text-[10px] font-medium text-white drop-shadow">Safari</span>
+                    </div>
+                    <div onclick="openApp('photosApp')" class="app-icon-btn flex flex-col items-center gap-1 cursor-pointer">
+                        <div class="w-14 h-14 rounded-2xl bg-white flex items-center justify-center shadow-lg">
+                            <i class="fa-solid fa-images text-2xl text-amber-500"></i>
+                        </div>
+                        <span class="text-[10px] font-medium text-white drop-shadow">Фото</span>
+                    </div>
+                    <div onclick="openApp('cameraApp')" class="app-icon-btn flex flex-col items-center gap-1 cursor-pointer">
+                        <div class="w-14 h-14 rounded-2xl bg-neutral-800 flex items-center justify-center shadow-lg border border-neutral-700">
+                            <i class="fa-solid fa-camera text-2xl text-gray-200"></i>
+                        </div>
+                        <span class="text-[10px] font-medium text-white drop-shadow">Камера</span>
+                    </div>
+                    <div onclick="openApp('settingsApp')" class="app-icon-btn flex flex-col items-center gap-1 cursor-pointer">
+                        <div class="w-14 h-14 rounded-2xl bg-gradient-to-b from-gray-400 to-gray-600 flex items-center justify-center shadow-lg">
+                            <i class="fa-solid fa-gear text-2xl text-white"></i>
+                        </div>
+                        <span class="text-[10px] font-medium text-white drop-shadow">Настройки</span>
+                    </div>
+                    <div onclick="openApp('calcApp')" class="app-icon-btn flex flex-col items-center gap-1 cursor-pointer">
+                        <div class="w-14 h-14 rounded-2xl bg-slate-900 border border-slate-700 flex items-center justify-center shadow-lg">
+                            <i class="fa-solid fa-calculator text-2xl text-amber-500"></i>
+                        </div>
+                        <span class="text-[10px] font-medium text-white drop-shadow">Калькулятор</span>
+                    </div>
+                    <div onclick="openApp('notesApp')" class="app-icon-btn flex flex-col items-center gap-1 cursor-pointer">
+                        <div class="w-14 h-14 rounded-2xl bg-gradient-to-b from-yellow-300 to-amber-500 flex items-center justify-center shadow-lg">
+                            <i class="fa-solid fa-note-sticky text-2xl text-white"></i>
+                        </div>
+                        <span class="text-[10px] font-medium text-white drop-shadow">Заметки</span>
+                    </div>
+                </div>
+
+                <!-- PAGE 2 (Games & Media) -->
+                <div class="page-screen grid grid-cols-4 grid-rows-4 gap-y-4 gap-x-3 pt-2">
+                    <div onclick="openApp('appstoreApp')" class="app-icon-btn flex flex-col items-center gap-1 cursor-pointer">
+                        <div class="w-14 h-14 rounded-2xl bg-gradient-to-b from-blue-400 to-blue-600 flex items-center justify-center shadow-lg">
+                            <i class="fa-solid fa-store text-2xl text-white"></i>
+                        </div>
+                        <span class="text-[10px] font-medium text-white drop-shadow">App Store</span>
+                    </div>
+                    <div onclick="openApp('musicApp')" class="app-icon-btn flex flex-col items-center gap-1 cursor-pointer">
+                        <div class="w-14 h-14 rounded-2xl bg-gradient-to-b from-pink-500 to-red-600 flex items-center justify-center shadow-lg">
+                            <i class="fa-solid fa-music text-2xl text-white"></i>
+                        </div>
+                        <span class="text-[10px] font-medium text-white drop-shadow">Музыка</span>
+                    </div>
+                    <div onclick="openApp('weatherApp')" class="app-icon-btn flex flex-col items-center gap-1 cursor-pointer">
+                        <div class="w-14 h-14 rounded-2xl bg-gradient-to-b from-sky-400 to-blue-600 flex items-center justify-center shadow-lg">
+                            <i class="fa-solid fa-cloud-sun text-2xl text-white"></i>
+                        </div>
+                        <span class="text-[10px] font-medium text-white drop-shadow">Погода</span>
+                    </div>
+                    <div onclick="openApp('clockApp')" class="app-icon-btn flex flex-col items-center gap-1 cursor-pointer">
+                        <div class="w-14 h-14 rounded-2xl bg-black border border-neutral-800 flex items-center justify-center shadow-lg">
+                            <i class="fa-solid fa-stopwatch text-2xl text-orange-500"></i>
+                        </div>
+                        <span class="text-[10px] font-medium text-white drop-shadow">Часы</span>
+                    </div>
+                    <div onclick="openApp('gameApp')" class="app-icon-btn flex flex-col items-center gap-1 cursor-pointer">
+                        <div class="w-14 h-14 rounded-2xl bg-gradient-to-b from-purple-500 to-indigo-700 flex items-center justify-center shadow-lg">
+                            <i class="fa-solid fa-xmark text-2xl text-white"></i>
+                        </div>
+                        <span class="text-[10px] font-medium text-white drop-shadow">Крестики</span>
+                    </div>
+                    <div onclick="openApp('snakeApp')" class="app-icon-btn flex flex-col items-center gap-1 cursor-pointer">
+                        <div class="w-14 h-14 rounded-2xl bg-gradient-to-b from-emerald-500 to-teal-700 flex items-center justify-center shadow-lg">
+                            <i class="fa-solid fa-staff-snake text-2xl text-white"></i>
+                        </div>
+                        <span class="text-[10px] font-medium text-white drop-shadow">Змейка</span>
+                    </div>
+                </div>
+
+                <!-- PAGE 3 (Installed Apps from App Store) -->
+                <div class="page-screen grid grid-cols-4 grid-rows-4 gap-y-4 gap-x-3 pt-2" id="installedAppsGrid">
+                    <div class="col-span-4 text-center text-xs text-white/50 my-auto">
+                        <p>Устанавливайте приложения из App Store</p>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Page Indicators (Dots) -->
+            <div class="flex justify-center items-center space-x-2 my-1">
+                <div id="dot0" onclick="switchPage(0)" class="w-2 h-2 rounded-full bg-white transition-all"></div>
+                <div id="dot1" onclick="switchPage(1)" class="w-2 h-2 rounded-full bg-white/40 transition-all"></div>
+                <div id="dot2" onclick="switchPage(2)" class="w-2 h-2 rounded-full bg-white/40 transition-all"></div>
+            </div>
+
+            <!-- Bottom Dock -->
+            <div class="dock-glass rounded-[32px] p-3 mx-4 mb-2 flex justify-around items-center shadow-2xl">
+                <div onclick="openApp('phoneApp')" class="app-icon-btn w-12 h-12 rounded-2xl bg-gradient-to-b from-green-400 to-green-600 flex items-center justify-center shadow">
+                    <i class="fa-solid fa-phone text-xl text-white"></i>
+                </div>
+                <div onclick="openApp('safariApp')" class="app-icon-btn w-12 h-12 rounded-2xl bg-white flex items-center justify-center shadow">
+                    <i class="fa-compass fa-regular text-2xl text-blue-500"></i>
+                </div>
+                <div onclick="openApp('messagesApp')" class="app-icon-btn w-12 h-12 rounded-2xl bg-gradient-to-b from-green-500 to-emerald-700 flex items-center justify-center shadow">
+                    <i class="fa-solid fa-comment text-xl text-white"></i>
+                </div>
+                <div onclick="openApp('musicApp')" class="app-icon-btn w-12 h-12 rounded-2xl bg-gradient-to-b from-pink-500 to-red-600 flex items-center justify-center shadow">
+                    <i class="fa-solid fa-music text-xl text-white"></i>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- 5. APP WINDOWS OVERLAYS -->
+
+        <!-- 1. PHONE -->
+        <div id="phoneApp" class="app-window closed absolute inset-0 z-30 bg-black text-white flex flex-col p-5 pt-12 justify-between">
+            <div class="flex justify-between items-center mb-2 text-xs">
+                <button onclick="closeApp()" class="text-blue-400 flex items-center space-x-1"><i class="fa-solid fa-chevron-left"></i> <span>Назад</span></button>
+                <span class="font-semibold">Телефон</span>
+                <div class="w-10"></div>
+            </div>
+            <div class="text-center mt-2">
+                <div id="phoneNumDisplay" class="text-3xl font-light h-10 tracking-wider"></div>
+            </div>
+            <div class="grid grid-cols-3 gap-4 px-4 text-2xl mb-6">
+                <button onclick="pressDial('1')" class="w-16 h-16 rounded-full bg-neutral-800 flex items-center justify-center mx-auto active:bg-neutral-700">1</button>
+                <button onclick="pressDial('2')" class="w-16 h-16 rounded-full bg-neutral-800 flex items-center justify-center mx-auto active:bg-neutral-700">2</button>
+                <button onclick="pressDial('3')" class="w-16 h-16 rounded-full bg-neutral-800 flex items-center justify-center mx-auto active:bg-neutral-700">3</button>
+                <button onclick="pressDial('4')" class="w-16 h-16 rounded-full bg-neutral-800 flex items-center justify-center mx-auto active:bg-neutral-700">4</button>
+                <button onclick="pressDial('5')" class="w-16 h-16 rounded-full bg-neutral-800 flex items-center justify-center mx-auto active:bg-neutral-700">5</button>
+                <button onclick="pressDial('6')" class="w-16 h-16 rounded-full bg-neutral-800 flex items-center justify-center mx-auto active:bg-neutral-700">6</button>
+                <button onclick="pressDial('7')" class="w-16 h-16 rounded-full bg-neutral-800 flex items-center justify-center mx-auto active:bg-neutral-700">7</button>
+                <button onclick="pressDial('8')" class="w-16 h-16 rounded-full bg-neutral-800 flex items-center justify-center mx-auto active:bg-neutral-700">8</button>
+                <button onclick="pressDial('9')" class="w-16 h-16 rounded-full bg-neutral-800 flex items-center justify-center mx-auto active:bg-neutral-700">9</button>
+                <button onclick="pressDial('*')" class="w-16 h-16 rounded-full bg-neutral-800 flex items-center justify-center mx-auto active:bg-neutral-700">*</button>
+                <button onclick="pressDial('0')" class="w-16 h-16 rounded-full bg-neutral-800 flex items-center justify-center mx-auto active:bg-neutral-700">0</button>
+                <button onclick="pressDial('#')" class="w-16 h-16 rounded-full bg-neutral-800 flex items-center justify-center mx-auto active:bg-neutral-700">#</button>
+                <div></div>
+                <button onclick="makeCall()" class="w-16 h-16 rounded-full bg-green-500 flex items-center justify-center mx-auto text-white active:scale-95"><i class="fa-solid fa-phone"></i></button>
+                <button onclick="clearDial()" class="w-16 h-16 flex items-center justify-center mx-auto text-gray-400 text-xs">Стирать</button>
+            </div>
+        </div>
+
+        <!-- 2. MESSAGES -->
+        <div id="messagesApp" class="app-window closed absolute inset-0 z-30 bg-black text-white flex flex-col p-4 pt-12">
+            <div class="flex justify-between items-center mb-4 text-xs">
+                <button onclick="closeApp()" class="text-blue-400 flex items-center space-x-1"><i class="fa-solid fa-chevron-left"></i> <span>Назад</span></button>
+                <span class="font-semibold text-sm">Сообщения</span>
+                <i class="fa-solid fa-pen-to-square text-blue-400 text-base"></i>
+            </div>
+            <div id="chatBox" class="flex-1 overflow-y-auto space-y-3 p-2 text-xs">
+                <div class="bg-neutral-800 rounded-2xl p-3 max-w-[80%] self-start">
+                    <p class="font-semibold text-blue-400 mb-1">Apple Support</p>
+                    Добро пожаловать в iOS 18 Emulator! Испробуйте все приложения.
+                </div>
+            </div>
+            <div class="flex items-center space-x-2 pt-2 border-t border-neutral-800">
+                <input id="msgInput" type="text" placeholder="iMessage" class="flex-1 bg-neutral-900 border border-neutral-700 rounded-full px-4 py-2 text-xs focus:outline-none">
+                <button onclick="sendMessage()" class="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-xs"><i class="fa-solid fa-arrow-up"></i></button>
+            </div>
+        </div>
+
+        <!-- 3. SAFARI -->
+        <div id="safariApp" class="app-window closed absolute inset-0 z-30 bg-neutral-900 text-white flex flex-col pt-12">
+            <div class="flex justify-between items-center px-4 pb-2 text-xs border-b border-neutral-800">
+                <button onclick="closeApp()" class="text-blue-400 flex items-center space-x-1"><i class="fa-solid fa-chevron-left"></i> <span>Назад</span></button>
+                <span class="font-semibold">Safari</span>
+                <i class="fa-solid fa-rotate-right text-gray-400"></i>
+            </div>
+            <div class="flex-1 bg-neutral-950 p-4 overflow-y-auto">
+                <div class="text-center my-6">
+                    <h2 class="text-2xl font-bold mb-2">Стартовая страница</h2>
+                    <p class="text-xs text-gray-400">Быстрые закладки</p>
+                </div>
+                <div class="grid grid-cols-2 gap-3 mb-6">
+                    <div onclick="window.open('https://google.com','_blank')" class="bg-neutral-800 p-3 rounded-2xl flex items-center space-x-3 cursor-pointer">
+                        <i class="fa-brands fa-google text-red-400 text-xl"></i>
+                        <span class="text-xs font-medium">Google</span>
+                    </div>
+                    <div onclick="window.open('https://youtube.com','_blank')" class="bg-neutral-800 p-3 rounded-2xl flex items-center space-x-3 cursor-pointer">
+                        <i class="fa-brands fa-youtube text-red-500 text-xl"></i>
+                        <span class="text-xs font-medium">YouTube</span>
+                    </div>
+                </div>
+            </div>
+            <div class="p-3 bg-neutral-900 border-t border-neutral-800 flex items-center px-4">
+                <div class="flex-1 bg-neutral-800 rounded-xl px-3 py-1.5 flex items-center space-x-2 text-xs text-gray-400">
+                    <i class="fa-solid fa-lock text-[10px]"></i>
+                    <span>Поиск или имя сайта</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. CAMERA -->
+        <div id="cameraApp" class="app-window closed absolute inset-0 z-30 bg-black text-white flex flex-col pt-12 justify-between">
+            <div class="flex justify-between items-center px-4 text-xs z-10">
+                <button onclick="closeApp()" class="text-white flex items-center space-x-1"><i class="fa-solid fa-chevron-left"></i> <span>Назад</span></button>
+                <span class="font-semibold">Камера</span>
+                <i class="fa-solid fa-bolt text-yellow-400"></i>
+            </div>
+            <div class="relative flex-1 my-2 bg-neutral-900 rounded-3xl overflow-hidden flex items-center justify-center">
+                <video id="cameraVideo" autoplay playsinline class="w-full h-full object-cover hidden"></video>
+                <div id="cameraFallback" class="text-center p-4">
+                    <i class="fa-solid fa-camera text-4xl text-gray-600 mb-2"></i>
+                    <p class="text-xs text-gray-400">Разрешите веб-камеру для съемки</p>
+                    <button onclick="initCamera()" class="mt-3 px-4 py-1.5 bg-blue-600 rounded-full text-xs">Включить камеру</button>
+                </div>
+            </div>
+            <div class="p-6 flex justify-around items-center">
+                <div class="w-10 h-10 rounded-xl bg-neutral-800 overflow-hidden border border-white/20">
+                    <img id="lastSnapThumb" src="https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=100" class="w-full h-full object-cover">
+                </div>
+                <button onclick="snapPhoto()" class="w-16 h-16 rounded-full border-4 border-white p-1 flex items-center justify-center">
+                    <div class="w-full h-full rounded-full bg-white active:scale-90 transition"></div>
+                </button>
+                <button onclick="initCamera()" class="w-10 h-10 rounded-full bg-neutral-800 flex items-center justify-center"><i class="fa-solid fa-rotate"></i></button>
+            </div>
+        </div>
+
+        <!-- 5. PHOTOS / GALLERY -->
+        <div id="photosApp" class="app-window closed absolute inset-0 z-30 bg-black text-white flex flex-col p-4 pt-12">
+            <div class="flex justify-between items-center mb-4 text-xs">
+                <button onclick="closeApp()" class="text-blue-400 flex items-center space-x-1"><i class="fa-solid fa-chevron-left"></i> <span>Назад</span></button>
+                <span class="font-semibold text-sm">Галерея</span>
+                <label class="text-blue-400 cursor-pointer"><i class="fa-solid fa-plus text-base"></i><input type="file" accept="image/*" class="hidden" onchange="uploadPhoto(event)"></label>
+            </div>
+            <div id="galleryGrid" class="grid grid-cols-3 gap-1.5 overflow-y-auto flex-1">
+                <img src="https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=300" class="w-full h-24 object-cover rounded-lg cursor-pointer" onclick="openLightbox(this.src)">
+                <img src="https://images.unsplash.com/photo-1511884642898-4c92249e20b6?w=300" class="w-full h-24 object-cover rounded-lg cursor-pointer" onclick="openLightbox(this.src)">
+                <img src="https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=300" class="w-full h-24 object-cover rounded-lg cursor-pointer" onclick="openLightbox(this.src)">
+            </div>
+        </div>
+
+        <!-- LIGHTBOX MODAL -->
+        <div id="lightbox" class="hidden absolute inset-0 z-50 bg-black/95 flex flex-col justify-between p-4 pt-12">
+            <div class="flex justify-between items-center text-xs">
+                <button onclick="closeLightbox()" class="text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+                <span class="font-semibold text-white">Просмотр фото</span>
+                <div class="w-6"></div>
+            </div>
+            <div class="flex-1 flex items-center justify-center">
+                <img id="lightboxImg" src="" class="max-w-full max-h-[70vh] rounded-xl object-contain">
+            </div>
+            <div class="pb-6 text-center">
+                <button onclick="closeLightbox()" class="px-6 py-2 bg-white/20 rounded-full text-xs font-semibold">Закрыть</button>
+            </div>
+        </div>
+
+        <!-- 6. SETTINGS (WALLPAPER CUSTOMIZATION) -->
+        <div id="settingsApp" class="app-window closed absolute inset-0 z-30 bg-neutral-900 text-white flex flex-col p-5 pt-12">
+            <div class="flex justify-between items-center mb-4 text-xs">
+                <button onclick="closeApp()" class="text-blue-400 flex items-center space-x-1"><i class="fa-solid fa-chevron-left"></i> <span>Назад</span></button>
+                <span class="font-semibold text-sm">Настройки</span>
+                <div class="w-10"></div>
+            </div>
+            <div class="space-y-4 overflow-y-auto flex-1 pr-1">
+                <div class="bg-neutral-800 rounded-2xl p-4">
+                    <p class="text-xs font-semibold text-gray-300 mb-3">Обои iOS 18</p>
+                    <div class="grid grid-cols-4 gap-2 mb-3">
+                        <div onclick="setWallpaperStyle('wp-ios18')" class="h-16 rounded-xl wp-ios18 cursor-pointer border-2 border-white/40"></div>
+                        <div onclick="setWallpaperStyle('wp-neon')" class="h-16 rounded-xl wp-neon cursor-pointer border-2 border-white/40"></div>
+                        <div onclick="setWallpaperStyle('wp-ocean')" class="h-16 rounded-xl wp-ocean cursor-pointer border-2 border-white/40"></div>
+                        <div onclick="setWallpaperStyle('wp-sunset')" class="h-16 rounded-xl wp-sunset cursor-pointer border-2 border-white/40"></div>
+                    </div>
+                    <label class="block w-full py-2 bg-neutral-700 text-center rounded-xl text-xs text-blue-400 font-medium cursor-pointer">
+                        Загрузить свои обои
+                        <input type="file" accept="image/*" class="hidden" onchange="uploadCustomWallpaper(event)">
+                    </label>
+                </div>
+                <div class="bg-neutral-800 rounded-2xl divide-y divide-neutral-700 text-xs">
+                    <div class="flex justify-between items-center p-3.5"><span>Wi-Fi</span><span class="text-gray-400">Включен</span></div>
+                    <div class="flex justify-between items-center p-3.5"><span>Bluetooth</span><span class="text-gray-400">Включен</span></div>
+                    <div class="flex justify-between items-center p-3.5"><span>Модель</span><span class="text-gray-400">iPhone 16 Pro</span></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 7. APP STORE -->
+        <div id="appstoreApp" class="app-window closed absolute inset-0 z-30 bg-black text-white flex flex-col p-4 pt-12">
+            <div class="flex justify-between items-center mb-3 text-xs">
+                <button onclick="closeApp()" class="text-blue-400 flex items-center space-x-1"><i class="fa-solid fa-chevron-left"></i> <span>Назад</span></button>
+                <span class="font-semibold text-sm">App Store</span>
+                <div class="w-10"></div>
+            </div>
+            <div class="space-y-3 overflow-y-auto flex-1">
+                <div class="bg-neutral-900 p-3 rounded-2xl flex items-center justify-between border border-neutral-800">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-12 h-12 rounded-xl bg-gradient-to-tr from-amber-400 to-orange-500 flex items-center justify-center text-xl"><i class="fa-solid fa-kiwi-bird"></i></div>
+                        <div>
+                            <p class="text-xs font-semibold">Flappy Bird</p>
+                            <p class="text-[10px] text-gray-400">Аркады</p>
+                        </div>
+                    </div>
+                    <button onclick="installApp('Flappy Bird', 'fa-kiwi-bird', 'bg-gradient-to-tr from-amber-400 to-orange-500')" class="px-3 py-1 bg-white/20 rounded-full text-xs text-blue-400 font-bold">ЗАГРУЗИТЬ</button>
+                </div>
+                <div class="bg-neutral-900 p-3 rounded-2xl flex items-center justify-between border border-neutral-800">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-12 h-12 rounded-xl bg-gradient-to-tr from-purple-500 to-indigo-600 flex items-center justify-center text-xl"><i class="fa-solid fa-gamepad"></i></div>
+                        <div>
+                            <p class="text-xs font-semibold">Retro Games</p>
+                            <p class="text-[10px] text-gray-400">Игры</p>
+                        </div>
+                    </div>
+                    <button onclick="installApp('Retro Games', 'fa-gamepad', 'bg-gradient-to-tr from-purple-500 to-indigo-600')" class="px-3 py-1 bg-white/20 rounded-full text-xs text-blue-400 font-bold">ЗАГРУЗИТЬ</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 8. MUSIC -->
+        <div id="musicApp" class="app-window closed absolute inset-0 z-30 bg-gradient-to-b from-slate-900 to-black text-white flex flex-col p-6 pt-12 justify-between">
+            <div class="flex justify-between items-center text-xs">
+                <button onclick="closeApp()" class="text-pink-400 flex items-center space-x-1"><i class="fa-solid fa-chevron-left"></i> <span>Назад</span></button>
+                <span class="font-semibold">Apple Music</span>
+                <div class="w-10"></div>
+            </div>
+            <div class="my-auto text-center">
+                <div class="w-48 h-48 mx-auto rounded-3xl bg-gradient-to-tr from-pink-500 to-purple-600 flex items-center justify-center shadow-2xl mb-6">
+                    <i class="fa-solid fa-music text-6xl text-white"></i>
+                </div>
+                <h3 class="text-lg font-bold">iOS Synth Track</h3>
+                <p class="text-xs text-gray-400 mt-1">Web Audio Synth</p>
+            </div>
+            <div class="space-y-4 mb-4">
+                <div class="flex justify-around items-center text-2xl">
+                    <button onclick="playTone(300)"><i class="fa-solid fa-backward-step"></i></button>
+                    <button id="playMusicBtn" onclick="toggleMusicPlay()" class="w-14 h-14 rounded-full bg-white text-black flex items-center justify-center text-xl"><i class="fa-solid fa-play"></i></button>
+                    <button onclick="playTone(600)"><i class="fa-solid fa-forward-step"></i></button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 9. CALCULATOR -->
+        <div id="calcApp" class="app-window closed absolute inset-0 z-30 bg-black flex flex-col justify-between p-4 pt-12">
+            <div class="flex justify-between items-center text-xs">
+                <button onclick="closeApp()" class="text-amber-500 flex items-center space-x-1"><i class="fa-solid fa-chevron-left"></i> <span>Назад</span></button>
+            </div>
+            <div class="flex-1 flex flex-col justify-end px-2 mb-4">
+                <div id="calcDisplay" class="text-right text-5xl font-light text-white tracking-tight">0</div>
+            </div>
+            <div class="grid grid-cols-4 gap-2 text-xl font-medium">
+                <button onclick="calcInput('C')" class="h-14 rounded-full bg-gray-300 text-black flex items-center justify-center">AC</button>
+                <button onclick="calcInput('+/-')" class="h-14 rounded-full bg-gray-300 text-black flex items-center justify-center">±</button>
+                <button onclick="calcInput('%')" class="h-14 rounded-full bg-gray-300 text-black flex items-center justify-center">%</button>
+                <button onclick="calcInput('/')" class="h-14 rounded-full bg-amber-500 text-white flex items-center justify-center">÷</button>
+                <button onclick="calcInput('7')" class="h-14 rounded-full bg-neutral-800 text-white flex items-center justify-center">7</button>
+                <button onclick="calcInput('8')" class="h-14 rounded-full bg-neutral-800 text-white flex items-center justify-center">8</button>
+                <button onclick="calcInput('9')" class="h-14 rounded-full bg-neutral-800 text-white flex items-center justify-center">9</button>
+                <button onclick="calcInput('*')" class="h-14 rounded-full bg-amber-500 text-white flex items-center justify-center">×</button>
+                <button onclick="calcInput('4')" class="h-14 rounded-full bg-neutral-800 text-white flex items-center justify-center">4</button>
+                <button onclick="calcInput('5')" class="h-14 rounded-full bg-neutral-800 text-white flex items-center justify-center">5</button>
+                <button onclick="calcInput('6')" class="h-14 rounded-full bg-neutral-800 text-white flex items-center justify-center">6</button>
+                <button onclick="calcInput('-')" class="h-14 rounded-full bg-amber-500 text-white flex items-center justify-center">−</button>
+                <button onclick="calcInput('1')" class="h-14 rounded-full bg-neutral-800 text-white flex items-center justify-center">1</button>
+                <button onclick="calcInput('2')" class="h-14 rounded-full bg-neutral-800 text-white flex items-center justify-center">2</button>
+                <button onclick="calcInput('3')" class="h-14 rounded-full bg-neutral-800 text-white flex items-center justify-center">3</button>
+                <button onclick="calcInput('+')" class="h-14 rounded-full bg-amber-500 text-white flex items-center justify-center">+</button>
+                <button onclick="calcInput('0')" class="col-span-2 h-14 rounded-full bg-neutral-800 text-white flex items-center justify-start pl-6">0</button>
+                <button onclick="calcInput('.')" class="h-14 rounded-full bg-neutral-800 text-white flex items-center justify-center">,</button>
+                <button onclick="calcInput('=')" class="h-14 rounded-full bg-amber-500 text-white flex items-center justify-center">=</button>
+            </div>
+        </div>
+
+        <!-- 10. NOTES -->
+        <div id="notesApp" class="app-window closed absolute inset-0 z-30 bg-neutral-900 text-white flex flex-col p-5 pt-12">
+            <div class="flex justify-between items-center mb-4 text-xs">
+                <button onclick="closeApp()" class="text-amber-500 flex items-center space-x-1"><i class="fa-solid fa-chevron-left"></i> <span>Назад</span></button>
+                <span class="font-semibold text-sm">Заметки</span>
+                <button onclick="addNote()" class="text-amber-500 text-base"><i class="fa-solid fa-pen-to-square"></i></button>
+            </div>
+            <div id="notesContainer" class="flex-1 overflow-y-auto space-y-2"></div>
+        </div>
+
+        <!-- 11. WEATHER -->
+        <div id="weatherApp" class="app-window closed absolute inset-0 z-30 bg-gradient-to-b from-blue-500 to-indigo-900 text-white flex flex-col p-6 pt-12">
+            <div class="flex justify-between items-center text-xs mb-4">
+                <button onclick="closeApp()" class="text-white flex items-center space-x-1"><i class="fa-solid fa-chevron-left"></i> <span>Назад</span></button>
+            </div>
+            <div class="text-center mt-4">
+                <h2 class="text-3xl font-medium">Киев</h2>
+                <p class="text-7xl font-extralight my-4">18°</p>
+                <p class="text-sm text-blue-100">Переменная облачность</p>
+            </div>
+        </div>
+
+        <!-- 12. CLOCK / STOPWATCH -->
+        <div id="clockApp" class="app-window closed absolute inset-0 z-30 bg-black text-white flex flex-col p-5 pt-12">
+            <div class="flex justify-between items-center text-xs mb-4">
+                <button onclick="closeApp()" class="text-orange-500 flex items-center space-x-1"><i class="fa-solid fa-chevron-left"></i> <span>Назад</span></button>
+            </div>
+            <div class="flex-1 flex flex-col items-center justify-center">
+                <div id="stopwatchDisplay" class="text-5xl font-extralight my-6">00:00.00</div>
+                <div class="flex space-x-8">
+                    <button onclick="resetStopwatch()" class="w-16 h-16 rounded-full bg-neutral-800 text-gray-300 text-xs font-semibold">Сброс</button>
+                    <button id="swStartBtn" onclick="toggleStopwatch()" class="w-16 h-16 rounded-full bg-green-950 text-green-400 text-xs font-semibold">Старт</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 13. SNAKE GAME -->
+        <div id="snakeApp" class="app-window closed absolute inset-0 z-30 bg-neutral-950 text-white flex flex-col p-4 pt-12 items-center justify-between">
+            <div class="flex justify-between items-center w-full text-xs mb-2">
+                <button onclick="closeApp()" class="text-blue-400 flex items-center space-x-1"><i class="fa-solid fa-chevron-left"></i> <span>Назад</span></button>
+                <span class="font-semibold">Змейка</span>
+                <span id="snakeScore" class="text-amber-400">Счет: 0</span>
+            </div>
+            <canvas id="snakeCanvas" width="280" height="280" class="bg-black rounded-2xl border border-neutral-800 my-auto"></canvas>
+            <div class="grid grid-cols-3 gap-2 w-48 mb-4">
+                <div></div>
+                <button onclick="changeSnakeDir('UP')" class="p-3 bg-neutral-800 rounded-xl text-center active:bg-neutral-700"><i class="fa-solid fa-arrow-up"></i></button>
+                <div></div>
+                <button onclick="changeSnakeDir('LEFT')" class="p-3 bg-neutral-800 rounded-xl text-center active:bg-neutral-700"><i class="fa-solid fa-arrow-left"></i></button>
+                <button onclick="changeSnakeDir('DOWN')" class="p-3 bg-neutral-800 rounded-xl text-center active:bg-neutral-700"><i class="fa-solid fa-arrow-down"></i></button>
+                <button onclick="changeSnakeDir('RIGHT')" class="p-3 bg-neutral-800 rounded-xl text-center active:bg-neutral-700"><i class="fa-solid fa-arrow-right"></i></button>
+            </div>
+        </div>
+
+        <!-- 14. TIC TAC TOE GAME -->
+        <div id="gameApp" class="app-window closed absolute inset-0 z-30 bg-neutral-900 text-white flex flex-col p-5 pt-12 items-center justify-between">
+            <div class="flex justify-between items-center w-full text-xs">
+                <button onclick="closeApp()" class="text-blue-400 flex items-center space-x-1"><i class="fa-solid fa-chevron-left"></i> <span>Назад</span></button>
+                <span id="tttStatus" class="font-semibold">Ход: X</span>
+                <div class="w-10"></div>
+            </div>
+            <div class="grid grid-cols-3 gap-2 w-60 h-60 my-auto">
+                <button onclick="makeMove(this, 0)" class="ttt-btn bg-neutral-800 text-2xl font-bold rounded-2xl flex items-center justify-center h-full w-full"></button>
+                <button onclick="makeMove(this, 1)" class="ttt-btn bg-neutral-800 text-2xl font-bold rounded-2xl flex items-center justify-center h-full w-full"></button>
+                <button onclick="makeMove(this, 2)" class="ttt-btn bg-neutral-800 text-2xl font-bold rounded-2xl flex items-center justify-center h-full w-full"></button>
+                <button onclick="makeMove(this, 3)" class="ttt-btn bg-neutral-800 text-2xl font-bold rounded-2xl flex items-center justify-center h-full w-full"></button>
+                <button onclick="makeMove(this, 4)" class="ttt-btn bg-neutral-800 text-2xl font-bold rounded-2xl flex items-center justify-center h-full w-full"></button>
+                <button onclick="makeMove(this, 5)" class="ttt-btn bg-neutral-800 text-2xl font-bold rounded-2xl flex items-center justify-center h-full w-full"></button>
+                <button onclick="makeMove(this, 6)" class="ttt-btn bg-neutral-800 text-2xl font-bold rounded-2xl flex items-center justify-center h-full w-full"></button>
+                <button onclick="makeMove(this, 7)" class="ttt-btn bg-neutral-800 text-2xl font-bold rounded-2xl flex items-center justify-center h-full w-full"></button>
+                <button onclick="makeMove(this, 8)" class="ttt-btn bg-neutral-800 text-2xl font-bold rounded-2xl flex items-center justify-center h-full w-full"></button>
+            </div>
+            <button onclick="resetGame()" class="px-5 py-2 bg-indigo-600 rounded-full font-medium text-xs mb-4">Сброс</button>
+        </div>
+
+        <!-- 6. HOME BAR (GESTURE NAVIGATION TO CLOSE APP / UNLOCK) -->
+        <div id="homeBar" class="relative z-50 py-3 w-full flex justify-center items-center cursor-pointer group">
+            <div class="w-32 h-1 bg-white/80 rounded-full group-hover:bg-white group-hover:w-36 transition-all"></div>
+        </div>
+
+    </div>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        // Realtime System Clock
+        function updateClock() {
+            const now = new Date();
+            const h = String(now.getHours()).padStart(2, '0');
+            const m = String(now.getMinutes()).padStart(2, '0');
+            const timeStr = `${h}:${m}`;
+
+            document.getElementById('statusBarClock').innerText = timeStr;
+            document.getElementById('lockTime').innerText = timeStr;
+
+            const dateStr = now.toLocaleDateString('ru-RU', { weekday: 'long', month: 'long', day: 'numeric' });
+            document.getElementById('lockDate').innerText = dateStr.charAt(0).toUpperCase() + dateStr.slice(1);
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // Lockscreen Logic
+        let isLocked = true;
+        const lockScreen = document.getElementById('lockScreen');
+
+        function unlockPhone() {
+            if (isLocked) {
+                isLocked = false;
+                lockScreen.style.transform = 'translateY(-100%)';
+                lockScreen.style.opacity = '0';
+            }
+        }
+
+        // Swipe Up on Lockscreen
+        let lockStartY = 0;
+        lockScreen.addEventListener('touchstart', e => { lockStartY = e.touches[0].clientY; }, {passive: true});
+        lockScreen.addEventListener('touchend', e => {
+            if (lockStartY - e.changedTouches[0].clientY > 50) unlockPhone();
+        });
+        lockScreen.addEventListener('click', unlockPhone);
+
+        // Control Center Overlay
+        function toggleControlCenter() {
+            const cc = document.getElementById('controlCenter');
+            cc.classList.toggle('-translate-y-full');
+        }
+
+        function toggleQuickSetting(id) {
+            const btn = document.getElementById(id);
+            btn.classList.toggle('bg-blue-500');
+            btn.classList.toggle('bg-white/20');
+        }
+
+        function toggleFlashlight() {
+            toggleQuickSetting('flashBtn');
+            document.getElementById('lockFlashIcon').classList.toggle('text-yellow-300');
+        }
+
+        // Multi-page Swiping Logic
+        let currentPage = 0;
+        const pagesWrapper = document.getElementById('pagesWrapper');
+
+        function switchPage(page) {
+            if (page < 0 || page > 2) return;
+            currentPage = page;
+            pagesWrapper.style.transform = `translateX(-${page * 33.3333}%)`;
+            for (let i = 0; i < 3; i++) {
+                document.getElementById(`dot${i}`).className = i === page 
+                    ? "w-2 h-2 rounded-full bg-white transition-all" 
+                    : "w-2 h-2 rounded-full bg-white/40 transition-all";
+            }
+        }
+
+        // Swipe Gestures for Homescreen Pages (Touch & Mouse)
+        let touchStartX = 0, touchStartY = 0, isMouseDown = false;
+        const homeScreen = document.getElementById('homeScreen');
+
+        const handleStart = (x, y) => {
+            touchStartX = x;
+            touchStartY = y;
+            isMouseDown = true;
+        };
+
+        const handleEnd = (x, y) => {
+            if (!isMouseDown && !('ontouchstart' in window)) return;
+            isMouseDown = false;
+            let diffX = touchStartX - x;
+            let diffY = touchStartY - y;
+            if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 30) {
+                if (diffX > 0) switchPage(currentPage + 1);
+                else switchPage(currentPage - 1);
+            }
+        };
+
+        homeScreen.addEventListener('touchstart', e => handleStart(e.touches[0].clientX, e.touches[0].clientY), {passive: true});
+        homeScreen.addEventListener('touchend', e => handleEnd(e.changedTouches[0].clientX, e.changedTouches[0].clientY));
+
+        homeScreen.addEventListener('mousedown', e => handleStart(e.clientX, e.clientY));
+        homeScreen.addEventListener('mouseup', e => handleEnd(e.clientX, e.clientY));
+
+        // App Navigation & Home Bar Gesture
+        let currentAppId = null;
+
+        function openApp(appId) {
+            if (isLocked) return;
+            const app = document.getElementById(appId);
+            if (app) {
+                app.classList.remove('closed');
+                app.classList.add('open');
+                currentAppId = appId;
+                if (appId === 'snakeApp') startSnakeGame();
+            }
+        }
+
+        function closeApp() {
+            if (currentAppId) {
+                const app = document.getElementById(currentAppId);
+                if (app) {
+                    app.classList.remove('open');
+                    app.classList.add('closed');
+                }
+                currentAppId = null;
+            }
+        }
+
+        // Home Bar Touch Gesture (Swipe Up to close app / tap)
+        const homeBar = document.getElementById('homeBar');
+        let homeBarStartY = 0;
+
+        homeBar.addEventListener('touchstart', e => { homeBarStartY = e.touches[0].clientY; }, {passive: true});
+        homeBar.addEventListener('touchend', e => {
+            closeApp();
+        });
+        homeBar.addEventListener('click', closeApp);
+
+        // Lightbox Functions
+        function openLightbox(src) {
+            document.getElementById('lightboxImg').src = src;
+            document.getElementById('lightbox').classList.remove('hidden');
+        }
+
+        function closeLightbox() {
+            document.getElementById('lightbox').classList.add('hidden');
+        }
+
+        // Settings: Wallpapers Customization
+        function setWallpaperStyle(className) {
+            const backdrop = document.getElementById('wallpaperBackdrop');
+            backdrop.style.backgroundImage = '';
+            backdrop.className = `absolute inset-0 bg-cover bg-center transition-all duration-500 z-0 ${className}`;
+        }
+
+        function uploadCustomWallpaper(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const backdrop = document.getElementById('wallpaperBackdrop');
+                    backdrop.className = "absolute inset-0 bg-cover bg-center transition-all duration-500 z-0";
+                    backdrop.style.backgroundImage = `url(${e.target.result})`;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // App Store Installation
+        function installApp(name, iconClass, bgClass) {
+            const grid = document.getElementById('installedAppsGrid');
+            grid.innerHTML += `
+                <div onclick="alert('Запуск ${name}')" class="app-icon-btn flex flex-col items-center gap-1 cursor-pointer">
+                    <div class="w-14 h-14 rounded-2xl ${bgClass} flex items-center justify-center shadow-lg">
+                        <i class="fa-solid ${iconClass} text-2xl text-white"></i>
+                    </div>
+                    <span class="text-[10px] font-medium text-white drop-shadow">${name}</span>
+                </div>
+            `;
+            alert(`Приложение "${name}" успешно установлено на 3-ю страницу!`);
+        }
+
+        // Audio & Synth Music
+        let audioCtx = null, isPlaying = false;
+        function playTone(freq) {
+            try {
+                if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.frequency.value = freq;
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.8);
+            } catch (e) {
+                console.log(e);
+            }
+        }
+
+        function toggleMusicPlay() {
+            isPlaying = !isPlaying;
+            document.getElementById('playMusicBtn').innerHTML = isPlaying ? '<i class="fa-solid fa-pause"></i>' : '<i class="fa-solid fa-play"></i>';
+            document.getElementById('islandStatus').classList.toggle('hidden', !isPlaying);
+            if (isPlaying) playTone(440);
+        }
+
+        // Dynamic Island Expand
+        function toggleIslandExpand() {
+            const island = document.getElementById('dynamicIsland');
+            const compact = document.getElementById('islandCompact');
+            const expanded = document.getElementById('islandExpanded');
+            island.classList.toggle('expanded');
+            compact.classList.toggle('hidden');
+            expanded.classList.toggle('hidden');
+        }
+
+        // Camera WebCam
+        async function initCamera() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                const video = document.getElementById('cameraVideo');
+                video.srcObject = stream;
+                video.classList.remove('hidden');
+                document.getElementById('cameraFallback').classList.add('hidden');
+            } catch {
+                alert('Камера не доступна.');
+            }
+        }
+
+        function snapPhoto() {
+            playTone(800);
+            alert('Снимок сделан и сохранен!');
+        }
+
+        function uploadPhoto(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const grid = document.getElementById('galleryGrid');
+                    grid.innerHTML = `<img src="${e.target.result}" class="w-full h-24 object-cover rounded-lg cursor-pointer" onclick="openLightbox(this.src)">` + grid.innerHTML;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // Messages
+        function sendMessage() {
+            const input = document.getElementById('msgInput');
+            if (input.value.trim()) {
+                const chat = document.getElementById('chatBox');
+                chat.innerHTML += `<div class="bg-blue-600 rounded-2xl p-3 max-w-[80%] self-end ml-auto text-white">${input.value}</div>`;
+                input.value = '';
+                chat.scrollTop = chat.scrollHeight;
+            }
+        }
+
+        // Calculator
+        let calcVal = '0';
+        function calcInput(val) {
+            const d = document.getElementById('calcDisplay');
+            if (val === 'C') calcVal = '0';
+            else if (val === '=') {
+                try { calcVal = String(eval(calcVal)); } catch { calcVal = 'Ошибка'; }
+            } else {
+                calcVal = calcVal === '0' ? val : calcVal + val;
+            }
+            d.innerText = calcVal;
+        }
+
+        // Notes
+        let notes = ['Молоко, Хлеб, Сыр', 'Сделать проект iOS 18'];
+        function renderNotes() {
+            document.getElementById('notesContainer').innerHTML = notes.map((n, i) => `
+                <div class="p-3 bg-neutral-800 rounded-xl flex justify-between items-center text-xs">
+                    <span>${n}</span>
+                    <button onclick="notes.splice(${i},1); renderNotes();" class="text-red-400"><i class="fa-solid fa-trash"></i></button>
+                </div>
+            `).join('');
+        }
+        function addNote() {
+            const t = prompt('Новая заметка:');
+            if (t) { notes.push(t); renderNotes(); }
+        }
+        renderNotes();
+
+        // Stopwatch
+        let swInterval = null, swTime = 0, swRunning = false;
+        function toggleStopwatch() {
+            const btn = document.getElementById('swStartBtn');
+            if (!swRunning) {
+                swRunning = true;
+                btn.innerText = 'Пауза';
+                swInterval = setInterval(() => { swTime += 10; updateSwDisplay(); }, 10);
+            } else {
+                swRunning = false;
+                btn.innerText = 'Старт';
+                clearInterval(swInterval);
+            }
+        }
+        function resetStopwatch() { swTime = 0; updateSwDisplay(); }
+        function updateSwDisplay() {
+            const ms = Math.floor((swTime % 1000) / 10);
+            const sec = Math.floor((swTime / 1000) % 60);
+            const min = Math.floor(swTime / 60000);
+            document.getElementById('stopwatchDisplay').innerText = `${String(min).padStart(2,'0')}:${String(sec).padStart(2,'0')}.${String(ms).padStart(2,'0')}`;
+        }
+
+        // Snake Game
+        let snakeCanvas, snakeCtx, snakeInterval;
+        let snake = [{x: 10, y: 10}], snakeDir = 'RIGHT', food = {x: 12, y: 12}, score = 0;
+
+        function startSnakeGame() {
+            snakeCanvas = document.getElementById('snakeCanvas');
+            snakeCtx = snakeCanvas.getContext('2d');
+            snake = [{x: 10, y: 10}];
+            snakeDir = 'RIGHT';
+            score = 0;
+            if (snakeInterval) clearInterval(snakeInterval);
+            snakeInterval = setInterval(gameLoopSnake, 130);
+        }
+
+        function changeSnakeDir(dir) { snakeDir = dir; }
+
+        function gameLoopSnake() {
+            let head = {...snake[0]};
+            if (snakeDir === 'UP') head.y--;
+            if (snakeDir === 'DOWN') head.y++;
+            if (snakeDir === 'LEFT') head.x--;
+            if (snakeDir === 'RIGHT') head.x++;
+
+            if (head.x < 0 || head.x >= 14 || head.y < 0 || head.y >= 14) {
+                alert('Игра окончена! Счет: ' + score);
+                startSnakeGame();
+                return;
+            }
+
+            snake.unshift(head);
+            if (head.x === food.x && head.y === food.y) {
+                score += 10;
+                document.getElementById('snakeScore').innerText = 'Счет: ' + score;
+                food = {x: Math.floor(Math.random()*14), y: Math.floor(Math.random()*14)};
+            } else {
+                snake.pop();
+            }
+
+            snakeCtx.fillStyle = '#000';
+            snakeCtx.fillRect(0, 0, 280, 280);
+            snakeCtx.fillStyle = '#ef4444';
+            snakeCtx.fillRect(food.x * 20, food.y * 20, 18, 18);
+            snakeCtx.fillStyle = '#22c55e';
+            snake.forEach(s => snakeCtx.fillRect(s.x * 20, s.y * 20, 18, 18));
+        }
+
+        // Tic-Tac-Toe
+        let board = Array(9).fill(null), currentPlayer = 'X';
+        function makeMove(btn, i) {
+            if (board[i]) return;
+            board[i] = currentPlayer;
+            btn.innerText = currentPlayer;
+            currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+            document.getElementById('tttStatus').innerText = `Ход: ${currentPlayer}`;
+        }
+        function resetGame() {
+            board = Array(9).fill(null);
+            currentPlayer = 'X';
+            document.getElementById('tttStatus').innerText = 'Ход: X';
+            document.querySelectorAll('.ttt-btn').forEach(b => b.innerText = '');
+        }
+
+        // Dial Phone
+        let dialNum = '';
+        function pressDial(n) { dialNum += n; document.getElementById('phoneNumDisplay').innerText = dialNum; }
+        function clearDial() { dialNum = ''; document.getElementById('phoneNumDisplay').innerText = ''; }
+        function makeCall() { alert('Звонок в эмуляторе недоступен'); }
+    </script>
+</body>
+</html>
